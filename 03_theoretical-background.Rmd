@@ -1,0 +1,15 @@
+---
+output: pdf_document
+geometry: margin = 1in
+# output:
+#   html_document:
+#     df_print: paged
+bibliography: add/doc.bib
+---
+
+## 2. Theory {#theory}
+
+
+
+### 2.1. Formulas  {#2.1}
+

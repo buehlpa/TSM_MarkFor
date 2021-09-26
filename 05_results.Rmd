@@ -1,0 +1,8 @@
+---
+output: pdf_document
+geometry: margin = 1in
+---
+
+## 4. Results
+
+In this section, we summarize our results from the individual parts

@@ -1,0 +1,11 @@
+---
+output: pdf_document
+geometry: margin = 1in
+---
+
+## Index of figures {#index_of_figures}
+
+All figures are created with R-4.0.2 , RStudio Version 1.4.904 by the authors of this thesis (can be found in Github repository) except for the following:
+
+
+-  Figure \ref{fig:1} 

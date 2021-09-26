@@ -1,0 +1,83 @@
+---
+soutput:
+  pdf_document:
+    toc: no
+bibliography: add/doc.bib
+linkcolor: gray
+csl: add/ieee.csl
+header-includes:
+- \usepackage{pdfpages}
+- \usepackage{amsmath}
+- \usepackage{placeins}
+- \usepackage[font=it]{caption}
+output:
+  pdf_document: default
+---
+```{r, include=FALSE}
+options(tinytex.verbose = TRUE)
+```
+
+```{r knitr.global_options, include=F}
+knitr::opts_chunk$set(out.width = "70%", fig.align = "center", echo=FALSE, warning=FALSE, message=FALSE, tidy.opts=list(width.cutoff=60), tidy=TRUE)
+```
+
+```{r }
+source("add/libraries.R")
+source("add/functions.R")
+```
+
+
+\includepdf{add/titlepage.pdf}
+
+
+\pagenumbering{Roman}
+
+\setcounter{tocdepth}{4}
+\tableofcontents
+
+\newpage
+
+```{r child = '01_abstract.Rmd'}
+```
+
+\newpage
+
+\pagenumbering{arabic}
+
+```{r child = '02_introduction.Rmd'}
+```
+
+\newpage
+
+```{r child = '03_theoretical-background.Rmd'}
+```
+
+\newpage
+
+```{r child = '04_methodology.Rmd'}
+```
+
+\newpage
+
+```{r child = '05_results.Rmd'}
+```
+
+\newpage
+
+```{r child = '06_conclusion.Rmd'}
+```
+
+\newpage
+
+```{r child = '07_reference.Rmd'}
+```
+
+\newpage
+
+```{r child = '08_figureindex.Rmd'}
+```
+
+\newpage
+
+```{r child = '09_attachment.Rmd'}
+```

@@ -1,0 +1,9 @@
+---
+output:
+  html_document:
+    df_print: paged
+geometry: margin = 1in
+---
+
+## 3. Methodology
+

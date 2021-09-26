@@ -1,2 +1,1 @@
-# TSM_MarkFor
-Semester assignment MSE AS 2021
+# this project is part of the module TSM_markfor grading
