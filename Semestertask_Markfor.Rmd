@@ -1,0 +1,409 @@
+---
+title: "AMSM Hausaufgabe"
+author: "Dozentin: Dr. Anna Drewek ZHAW IDP"
+date: "Autor: Pascal Simon Bühler Wi17t 1-4-2021 ZH"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_chunk$set(message  = F)
+knitr::opts_chunk$set(fig.align = "center")
+```
+
+```{r, include=F,echo=T}
+library(kableExtra)
+mot=read.table("motorins.dat",header=T,sep = "")
+str(mot)
+```
+
+##  Aufgabe 1
+
+Der Datensatz motorins.dat enthält gruppierte Informationen zu Schadenszahlungen (Zahlungen),
+welche im Zusammenhang mit Motorfahrzeugversicherungen getätigt wurden. Ziel ist es ein
+Modell für Schadenshöhe (Zahlungen) zu erstellen. Als erklärende Variablen stehen die Anzahl
+gefahrener Kilometer (Kilometer), die Automarke (Marke) und die Bonusstufe zur Verfügung
+(Bonus). Zusätzlich ist pro Gruppierung die Anzahl Schadenfälle (Schadensfaelle) gegeben.
+
+
+
+
+(a)
+Verschaffen Sie sich (mittels geeigneter grafischer Darstellungen) einen Überblick über die Daten.
+Wie ist die Zielgrösse Schadenshöhe verteilt? Gibt es einen Zusammenhang zwischen Schadenshöhe
+und Anzahl Schadensfälle?
+
+
+
+```{r Schaden,echo=F,include=TRUE,fig.cap="Zielvariable Schadenshöhe",out.width="80%"}
+par(mfrow=c(1,2))
+hist(mot$Zahlungen,breaks= 50,main= "Histogramm Schadenshoehe",xlab="Zahlungen")
+boxplot(mot$Zahlungen,main= "Boxplot Schadenshoehe")
+```
+
+*Die Zielgrösse ist rechtsschief verteilt und die Datenpunkte sind alle > 0, Diese 2 Merkmale weisen auf die Anwendung eines Log-Link. Die Zielgrösse könnte aus einer Gammaverteilung oder Poissonverteilung stammen*
+*Der Zusammenhang der beiden Variabeln ist stark positiv, je mehr Schadensfälle es hat desto höher sind die Zahlungen, es könnte sein dass die Variable "Zahlungen" die kumulierten Zahlungen der Schadensfälle ist. Von Interesse wäre hier Schadenshöhe pro Fall wie in Figure \ref{fig:schadenshöhe_pro_fall} dargestellt*
+
+
+```{r Zusammenhang Höhe zu Fälle,echo=F,include=TRUE,fig.cap="Zusammenhang Schadenshöhe / Fälle",out.width="80%"}
+plot(mot$Schadensfaelle,mot$Zahlungen,main="Zusammenhang Höhe / Fälle",xlab="Anzahl Faelle",ylab= "Schadshöhe")
+legend("bottomright", legend="Pearson Correlation = 0.9953375")
+```
+
+```{r schadenshöhe_pro_fall,echo=F,include=TRUE,fig.cap="Ratio",fig.dim=c(5,3.5),out.width="100%"}
+ratio =mot$Zahlungen / mot$Schadensfaelle
+hist(ratio,breaks = 50,main= " Histogramm  Schadenshöhe / Anzahl Fälle ")
+legend("topright", legend="Schadenshöhe pro Fall")
+```
+
+\newpage
+
+(b)
+Entfernen Sie diejenigen Datenpunkte, bei denen es keine Schadensfälle gab und kodieren Sie die
+erklärenden Variablen Kilometer, Marke und Bonus als Faktoren. Begründen Sie, warum diese
+beiden Schritte für ein Schadensmodell sinnvoll sind.
+
+&nbsp;
+
+```{r,include=T, echo = T}
+v=c(3:6);mot[,v]=lapply(mot[,v],factor)
+```
+
+&nbsp;
+
+*Da ein Modell gesucht ist um die Schadenshöhe zu modellieren würden Werte mit 0 keinen Beitrag zur Erklärung liefern, wenn kein Schaden vorliegt muss auch nicht gezahlt werden.*
+
+
+*Die Variabeln in Faktoren umzuwandeln macht Sinn, da wir so nach verschiedenen Stufen argumentieren können also gibt es für jeden Faktor eine eigene Steigung.Wir können die einzelne Stufen in den Variabeln auf Einfluss untersuchen und nicht nur die Varible als Ganzes. Wie in Aufgabe d ersichtlich, ist die Variable Zone ebenfalls signifikant, deswegen wird sie auch in einen Faktor umgewandelt und ins Modell miteinbezogen.*
+
+
+
+&nbsp;
+
+(c)
+Passen Sie eine Gamma-Regression (Link: log) zur Modellierung der Schadenshöhe an. Vergessen
+Sie nicht die Schadensfälle im Modell als offset zu berücksichtigen. Begründen Sie, warum ein
+solches Modell geeignet ist.
+
+&nbsp;
+
+```{r,include=T, echo = T}
+fit.mot <- glm(Zahlungen ~ Kilometer+Marke+Bonus+Zone, offset = log(Schadensfaelle),
+                 data = mot, family = Gamma(link = "log"))
+```
+
+&nbsp;
+ 
+*Wie in (b) schon erwähnt hat hier die Höhe des Schadens eine Abhängigkeit mit der Anzahl Fälle somit würde ein Rate Model besser passen mit:*
+
+
+\begin{equation}
+  \label{eq: Ratio model}
+  \eta_{i}=Log(Zahlungen_{i}/Schadensfaelle_{i})
+\end{equation}
+
+*$\eta_{i}$ ist der lineare Prädiktor, mit $\eta_{i}= \beta_{0}+ \beta_1 x Marke2 + ... + \beta_{24} x Zone7$,  aus Bequemlichkeitsgründen sparen wir uns diesen auszuschreiben da hier 24  Parameter stehen.*
+
+\newpage
+
+(d)
+Prüfen Sie die Signifikanz der erklärenden Variablen und beschreiben Sie für die auf 5% signifikanten
+Variablen anhand der geschätzten Koeffizienten, welchen Einfluss diese auf die erwartete
+Schadenshöhe haben.
+
+
+&nbsp;
+
+
+*Um den direkten Einfluss auf den Erwartungswert der Zielvariable zu messen, müssen wir die Gleichung 1 umstellen und kommen so auf:*
+
+
+\begin{equation}
+  \label{eq: Ratio model}
+  Zahlungen_{i}=e^{\eta_{i}}Schadensfaelle_{i}
+\end{equation}
+
+&nbsp; 
+
+
+
+
+```{r,include=T, eval= F}
+drop1(fit.mot, test = "Chisq")
+summary(fit.mot)
+
+```
+
+
+*Wir testen zuerst die 4 erklärenden Variablen als Block mit dem Chisquared- Test und sehen so das Marke und Zone signifikant sind. Mit dem T- Test erhalten wir auf dem 10% Niveau, 6 signifikante erklärende Variablen + den Achsenabschnitt, da das 5 % Niveau gefragt ist sind noch 2 Variabeln + Achsenabschnitt signifikant: Marke 8 und Zone 6. In der Tabelle \ref{tab:inttable} sind die Werte ersichtlich für die signifkanten Variabeln bis zum 10 % Niveau(oberste Zeile ist Signifikanz der t-statistik), bei Marke 3 ist der t- test genau auf  5 % signifikant, deswegen könnte mandie Variable auch als wichtig betrachten.* 
+&nbsp;
+ 
+ *Alle signifikanten Variabeln haben positive $\beta$, was bedeutet wenn die erklärende Variable 1 ist, multiplizert sich die Gleichung mit $\exp(beta_{i})$ (In der Tabelle als Multiplikator bezeichnet) . Die unterste Zeile (veraenderung) bezieht sich auf den prozentualen Anstieg des Erwartungswertes der Zielvariable bei Einbezug der erklärenden Variable.*
+
+
+```{r inttable, echo=FALSE}
+Name=c("Kilometer5","Marke3","Marke8","Bonus2","Zone5","Zone6")  
+Test=c(0.06007,0.05000,0.00187,0.08971,0.07360,0.02616)
+Beta=c(0.11850,0.16121,0.25816,0.12449,0.12816,0.15440)
+Multiplikator=exp(c(0.11850,0.16121,0.25816,0.12449,0.12816,0.15440))
+Veraenderung= (Multiplikator-1)*100
+df=as.data.frame(rbind(Test,Beta,Multiplikator,Veraenderung))
+colnames(df)=Name
+
+kbl(df, caption="Signifikante Erklärende Variablen", booktabs = T, linesep = "") %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+```
+ 
+
+
+
+\newpage
+
+##  Aufgabe 2: Energieverbrauch
+
+
+Ein wichtiges Planungsproblem der Elektrizitätsversorger ist die Sicherstellung der Energie zu
+Spitzenverbrauchszeiten. Üblicherweise zahlen die Kunden für den Energieverbrauch ohne Berücksichtigung
+des Zeitpunkts des Verbrauchs. Das Elektrizitätsnetz muss aber so ausgelegt sein, dass
+auch bei maximaler Belastung genügend Energie vorhanden ist. In diesem Beispiel modellieren
+wir den maximalen stündlichen Verbrauch (Spitze - in Kilowatt) innerhalb eines Monats in Abhängigkeit
+vom monatlichen Energieverbrauch (Energieverbrauch in Kilowattstunden) von 53
+Haushalten für den Monat August.
+
+
+
+```{r , include=F,}
+usage=read.table("eUsage.dat",header=T,sep = "")
+str(usage)
+```
+
+
+
+(a)
+Nehmen Sie an, dass die Zielgrösse normalverteilt ist. Passen Sie ein dafür geeignetes Modell an.
+Was sind die geschätzten Koeffizienten? Wie sind diese zu interpretieren?
+
+&nbsp;
+```{r , include=T,echo=F}
+fit.usage=lm(Spitze~.,data = usage)
+```
+
+```{r , include=T,eval=  F}
+fit.usage=lm(Spitze~.,data = usage)
+summary(fit.usage)
+```
+
+&nbsp;
+
+*Unter Annahme der Normalverteilung stellen wir ein lineares Regressionsmodell auf mit den geschätzten Parameter:* 
+
+\begin{equation}
+  \label{eq: LM}
+  Spitze_{i}=-0.831304 + 0.003683 * Energieverbrauch_{i}
+\end{equation}
+
+*Gemäss dem T Test sind Achsenabschnitt sowie Energieverbrauch signifikant. Die Koeffizienten lassen sich direkt interpretieren: Wenn der Energieverbrauch um 1 steigt, dann steigt die erwartete Spitzenleistung um $3.683x10^{-3}$*
+*Gemäss dem Bestimmtheitsmass erklärt das Modell 70 % der Varianz der Residuen. *
+
+
+```{r LM,echo=F,include=TRUE,fig.cap="LM Energieverbrauch",out.width="80%"}
+plot(usage$Energieverbrauch,usage$Spitze, xlab = "Energie Verbrauch",ylab = "Maximale Stuendliche Leistung", las = 1)
+abline(a=-0.8313037, b=0.0036828,col="red")
+legend("bottomright", inset=.02, legend="Linear Model",lty=1,
+       col="red", cex=0.8, horiz=F)
+```
+ \newpage
+ 
+(b)
+Führen Sie eine Residuenanalyse für das Modell aus (a) durch. Was ist Ihre Schlussfolgerung?
+
+```{r Residuen Analyse1,echo=F,include=TRUE,fig.cap="LM Residual vs fitted",out.width="65%"}
+plot(fit.usage,which=1)
+```
+```{r Residuen Analyse2,echo=F,include=TRUE,fig.cap="LM Normalverteilung",out.width="65%"}
+plot(fit.usage,which=2)
+```
+
+*In Figure \ref{fig:Residuen Analyse1} wird ersichtlich, dass der Erwartungswert der Residuen nicht konstant 0 ist und gegen rechts wird der Ausreisser ersichtlich. Die Streuung bewegt sich ungefähr im Bereich  -4 , 4. In Abbildung \ref{fig:Residuen Analyse2} scheinen die Residuen nicht ganz mit den Quantilen einer Normalverteilung  übereinzustimmen * 
+
+\newpage
+```{r Residuen Analyse3,echo=F,include=TRUE,fig.cap="LM Scale Location",out.width="65%"}
+plot(fit.usage,which=3)
+```
+```{r Residuen Analyse4,echo=F,include=TRUE,fig.cap="LM Leverage",out.width="65%"}
+plot(fit.usage,which=5)
+```
+*In Figure \ref{fig:Residuen Analyse3} beobachten wir, dass die Varianz in den Residuen ebenfalls nicht konstant ist. Gemäss Cooks Distance haben wir einen Ausreisser Nr 50 welcher ein Hebelpunkt darstellt. Beobachtung Nr 52 und Nr 26 haben zwar einen etwas grösseren Einfluss, stellen aber  gemäss Cooks Distance keinen gefährlichen Hebel dar.* 
+
+\newpage
+
+
+
+```{r Residuen Analyse5,echo=F,include=TRUE,fig.cap="LM Energieverbrauch",out.width="100%",fig.dim=c(10,7)}
+par(mfrow=c(2,2))
+source("C:/Users/buehl/OneDrive/Dokumente/ZHAW/BSc Wirtschaftsingenieur/SEM8/ASMS/Woche01/Daten/RFn_Plot-lmSim.R")
+plot.lmSim(fit.usage)
+```
+&nbsp; 
+
+*Durch die Simulationen wird ersichtlich das insbesondere die Varianz eine systematische Abweichung vorweist, der Glätter für den Erwartungswert scheint im hinteren Bereich Richtung Ausreisser etwas abzuweichen. Die Simulation zeigt das die Quantile trotzdem noch einer Normalverteilung entstammen könnten.*
+*Als Gesamtfazit sind die Modellannahmen verletzt und es müssen Massnahmen getroffen werden: Andere Modellwahl oder Transformation der Variablen*
+
+\newpage
+
+
+(c)
+Nehmen Sie nun an, dass die Zielgrösse Gamma verteilt ist. Wählen Sie den Link so, dass Sie
+denselben strukturellen Zusammenhang wie in (a) haben. Was bedeuten die geschätzen Koeffizienten
+bei diesem Modell? Beschreiben Sie die Modellunterschiede.
+
+&nbsp; 
+```{r , include=T,echo = F}
+fit.usage2=glm(Spitze ~ Energieverbrauch,data = usage, family = Gamma(link = "identity"))
+```
+
+```{r , include=T,eval = F}
+fit.usage2=glm(Spitze ~ Energieverbrauch,data = usage, family = Gamma(link = "identity"))
+summary(fit.usage2)
+confint(fit.usage2)
+```
+&nbsp;
+
+*Durch den Identitätslink erhalten wir die gleichen strukturellen Annahmen. Der Erwartunswert der gammaverteilte Zielvariable wird folgendermassen modelliert:*
+
+\begin{equation}
+  \label{eq: glm}
+  \mu_{i}=-0.7675127 + 0.0036620 * Energieverbrauch_{i}
+\end{equation}
+
+&nbsp; 
+
+*Mit  $Spitze\sim Gamma( \mu,\phi)$*
+
+
+
+*Die Konfidenzintervalle über die  Likelihoodprofilspuren sind in Tabelle \ref{tab:int_table2} ersichtlich*
+
+&nbsp; 
+
+```{r int_table2, echo=FALSE}
+df=as.data.frame(confint(fit.usage2))
+colnames(df)=c("2.5 %","97.5 %")
+rownames(df)=c("beta0","beta1")
+kbl(df, caption="Konfidenzintervalle", booktabs = T, linesep = "") %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+&nbsp; 
+
+*Die Koeffizienten sehen sehr ähnlich aus im Vergleich zu der linearen Regression, sie unterscheiden sich um:*
+
+&nbsp;
+
+$\Delta_{\beta_{0}lm,\beta_{0}glm}  = 0.0637913$
+
+und
+
+$\Delta_{\beta_{1}lm,\beta_{1}glm}= 2.08e-05$ 
+
+
+\newpage
+
+(d)
+Führen Sie auch für das Modell aus (c) eine Residuenanalyse durch. Was ist Ihre Schlussfolgerung?
+
+
+&nbsp; 
+
+
+```{r glm_res, echo=F,include=TRUE,fig.cap="Residuals",out.width="80%"}
+source("C:/Users/buehl/OneDrive/Dokumente/ZHAW/BSc Wirtschaftsingenieur/SEM8/ASMS/Funktionen/plot-glmTA.R")
+plot.glmTA(fit.usage2)
+```
+&nbsp; 
+
+
+*Der Glätter in den Devianz Residuen Abbildung \ref{fig:glm_res} links, verläuft auch hier nicht ganz horizontal, Die Residuen scheinen aber näher um 0 zu streuen von ca -1 bis 1,3. Die Simulation \ref{fig:glm_res} zeigt, dass bei 2 eine Abweichung vorliegt.*
+\newpage
+
+*In Figure \ref{fig:glm_lev} sehen wir, dass das Residuum 2 einen Hebel hat, der Rest scheint gemäss der  gemäss Cooks Distance ungefährlich zu sein.*
+
+&nbsp; 
+
+
+```{r glm_lev, echo=F,include=TRUE,fig.cap="GLM Leverage Plot",out.width="80%"}
+plot(fit.usage2,which=5)
+```
+&nbsp;
+
+(e)
+Vergleichen Sie die beiden Modelle ((a) und (c)) mittels AIC. Welches ist das bessere Modell?
+
+&nbsp; 
+
+```{r,include=T, eval=F}
+AIC(fit.usage)#    202.668       LM      
+AIC(fit.usage2)#   186.2271      GLM mit Gammaverteilung und identity link
+```
+&nbsp; 
+
+*Gemäss dem Akaike Informationskriterum scheint das Modell mit Annahme der Gammaverteilung die Zielvariable  besser zu fitten. Da wir jeweils die gleiche Anzahl Parameter haben wird beim Vergleich der AICs nur die Maximum Likelihood miteinander verglichen.*
+
+\newpage
+(f)
+Der Elektrizitätsversorger ist am Spitzenverbrauch von 3 Haushaltstypen (gering, mittel und hoher
+Verbrauch) im August interessiert, d.h. monatlicher Verbrauch: 1500 kWh, 1000 kWh und 750 kWh.
+
+
+Verwenden Sie das bessere der beiden Modelle, um für den Elektrizitätsversorger eine Vorhersage
+mit 99% Vertrauensintervall für den maximal erwarteten stündlichen Verbrauch zu machen.
+
+*Mit dem in e) gewählten Modell bestimmen wir nun die Punktprognose des Erwartungswertes sowie deren Konfidenzintervall. *
+
+*Die exakten Werte der Prognose sind in Tabelle \ref{tab:int_table3} ersichtlich und in Abbildung \ref{fig:glm_pred} dargestellt*. 
+
+*Die gewünschten Prognosen für die Punkte liegen im Bereich der erfassten Daten und sind deshalb bezüglich der Lage gültig.*
+
+```{r,include=T,eval=F}
+newdat <- data.frame(Energieverbrauch=c(750,1000,1500))
+eta_hat <- predict(fit.usage2, newdata = newdat, se.fit = TRUE, type = "link")
+eta_ci_up   = eta_hat$fit +  qnorm(1-0.01/2)*eta_hat$se.fit
+eta_hat$fit
+eta_ci_down=  eta_hat$fit -  qnorm(1-0.01/2)*eta_hat$se.fit
+```
+
+
+```{r glm_pred, echo=F,include=TRUE,fig.cap="Predicition GLM",out.width="80%"}
+plot(usage$Energieverbrauch,usage$Spitze, xlab = "Energie Verbrauch",ylab = "Maximale Stuendliche Leistung", las = 1)
+#abline(v=c(750,1000,1500),lty=2,col = "red",cex=2)
+points(x=c(750,1000,1500),y=c(1.978977, 2.894474, 4.725467),col="green",pch="+",cex=2)
+points(x=c(750,750,1000,1000,1500,1500),y=c(2.351343,1.606612,3.471271,2.317677,3.695142,5.755793),col="red",pch="-",cex=2)
+legend("bottomright", inset=.02, legend=c("Prognose", "Konfidenzintervall"),
+       col=c("green", "red"), pch = c("+","-"), cex=0.8, horiz=F)
+```
+
+`
+
+```{r,include=F, echo = T}
+newdat <- data.frame(Energieverbrauch=c(750,1000,1500))
+eta_hat <- predict(fit.usage2, newdata = newdat, se.fit = TRUE, type = "link")
+eta_ci_up   = eta_hat$fit +  qnorm(1-0.01/2)*eta_hat$se.fit
+eta_hat$fit
+eta_ci_down=  eta_hat$fit -  qnorm(1-0.01/2)*eta_hat$se.fit
+```
+
+
+
+```{r int_table3, echo=FALSE}
+predi=data.frame(rbind(eta_ci_up,eta_hat$fit,eta_ci_down))
+colnames(predi) = c("750","1000","1500")
+rownames(predi) = c("+0.005","fit","-0.005")
+kbl(predi, caption="Vorhersage", booktabs = T, linesep = "") %>%
+  kable_styling(latex_options = c("striped", "hold_position"))
+```
+
+
+
+
+
