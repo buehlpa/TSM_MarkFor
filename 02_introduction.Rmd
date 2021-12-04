@@ -1,9 +1,0 @@
----
-output: pdf_document
-geometry: margin = 1in
----
-
-## 1. Introduction {#introduction}
-
-problem introduction
-
