@@ -1,0 +1,235 @@
+---
+title: "Fallstudie"
+author: "Dozent: Prof. Dr. Andreas Ruckstuhl ZHAW IDP"
+date: "Autor: Pascal Simon Bühler Wi17t 1-4-2021 ZH"
+output: pdf_document
+header-includes:
+- \usepackage{pdfpages}
+- \usepackage{amsmath}
+- \usepackage{placeins}
+- \usepackage{caption}
+---
+\captionsetup[figure]{name=Abbildung}
+\captionsetup[table]{name=Tabelle}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = F)
+knitr::opts_chunk$set(message  = F)
+knitr::opts_chunk$set(fig.align = "center")
+```
+Diese Arbeit ist ein Lösungsversuch zur Aufgabenstellung *AMSM21-B-HA.pdf* zu der Fallstudie *AMSM21-B-HA_Fallstudie.pdf* im Modul Advanced Methods in Statistical Modeling.
+
+Für die Analyse werden folgende Pakete benötigt:
+```{r, include=T,eval=FALSE}
+library(survival)
+library(discSurv)
+library(gam)
+source("addFn4survAnal.R")      # von rkst
+load("customerAcquisition.rda") # Datensatz aus Aufgabenstellung 
+#Arbeit erstellt mit R-Version R-4.0.2, Rmarkdown
+```
+
+```{r, include=F,echo=T}
+library(survival)
+library(discSurv)
+library(gam)
+source("addFn4survAnal.R")
+load("customerAcquisition.rda")  
+cA=customerAcquisition;
+cAa=cA[which(cA$acquisition==1),-c(1:4)]
+cAa$industry<-as.factor(cAa$industry)
+which(cAa$censor==1)==which(cAa$duration==730)
+cAa$censor=-1*(cAa$censor-1)
+cAa.fitw <- survreg(Surv(duration, censor) ~ . , data=cAa, dist="weibull")
+```
+### Aufgabe a) 
+
+Im Modell werden nur diejenigen Kunden gebraucht die aquiriert wurden. Wir entfernen die nicht-aquirierten, lassen die nicht benutzten Variabeln weg und wandeln industry in eine Faktorvariable  um.
+
+```{r , include=T,eval=  F}
+cA=customerAcquisition;cAa=cA[which(cA$acquisition==1),-c(1:4)];
+cAa$industry<-as.factor(cAa$industry)# muss nicht zwingend Faktorvariable sein da nur 2 Stufen!
+```
+
+Die Variable Censor zensiert nur Beobachtungen am Ende der Beobachtungsdauer und nicht durch andersweitige Ausfälle Tod o.Ä. D.h alle in Duration aufgeführten Werte sind unzensiert bis auf diejenigen die den Wert 730 haben und in Censor eine 1. Demnach haben 157 vor dem Erreichen von 2 Jahren die Firma verlassen und 135 waren beim Erreichen der 2 Jahre immernoch Kunden, man weiss aber nicht wielange.
+Für das Modell wandeln wir die unzensierten in 1  und die zensierten in 0 um.
+
+```{r , include=T,eval=  F}
+sum(which(cAa$censor==1)==which(cAa$duration==730)) #check ob alle mit 730 auch zensiert sind 
+cAa$censor=-1*(cAa$censor-1)# umwandeln 0 -> 1, 1-> 0
+```
+
+Mit den bereinigten Daten erstellen wir nun das Modell in R 
+
+```{r , include=T,eval=  F}
+cAa.fitw <- survreg(Surv(duration, censor) ~ . , data=cAa, dist="weibull")
+summary(cAa.fitw)
+```
+
+
+\newpage
+
+
+
+```{r param, fig.align='center', out.width='100%', fig.cap="Geschätzte Parameter", echo=FALSE}
+knitr::include_graphics("comparison.jpg")
+```
+Der Vergleich in Abbildung \ref{fig:param} der beiden Modelle bringt Ähnlichkeiten und Differenzen mit sich. Die geschätzten Parameter stimmen in der Grössenordnung ziemlich gut überein. Einige wenige sind durch die Rundung sogar gleich , rundet man zum Bsp. den Paramter für Employees (\textcolor{yellow}{gelb} markiert)  sind die Werte gleich, respektive die Parameter sind nicht signifikant. 
+
+In den Resultaten aus der Fallstudie müsste beim unteren Ret_Expense eigentlich Ret_Expense_SQ stehen. Die p-werte sind dort unterschiedlich (\textcolor{red}{rot} markiert), beim unserem geschätzen Modell ist der Parameter signifikant im Gegensatz zur Fallstudie, wobei aber die Grössenordnung des Parameters übereinstimmt mit $10^{-8}$ Abweichung. 
+Bei dem Parameter für frequency (\textcolor{green}{grün} markiert)verhält es sich genau umgekehrt, in der Studie ist er signifikant im unserem Modell jedoch nicht mehr, wobei auch hier die Grössenordnung eigentlich übereinstimmt. Es fällt auf dass bei beiden Modellen die quadrierten Terme wohl nicht so wichtig sein könnten für das Modell.
+ 
+Aus der Ähnlichkeit der Outputs lässt sich schliessen, dass die 
+beiden Parameter Scale  (=$\sigma$   \textcolor{orange}{orange} markiert) aus der Gumbelparametrisierung  stammen, auch diese Parameter sind fast gleich.
+Für die Weibullverteilung müsste man noch zurücktransformieren mit $\alpha = \frac{1}{\sigma}$ und  $\lambda = e^{-\beta_{0}}$, bei der Fallstudie ist $\alpha$ schon gegeben bei Shape.
+
+
+Log($\sigma$) ist signifikant von 0 verschieden, deswegen könnte man das Modell nicht mit einer "gedächtnislosen" Exponentialverteilung anpassen.
+
+
+
+Die Unterschiede in den Resultaten könnten daher kommen, dass nicht der gleiche Algorithmus verwendet wurde. Mit dem paket survreg wird der Newton Raphson Algorithmus verwendet.
+
+Die Unterschiede der Signifikanzen lassen sich vermutlich auf unterschiedliche Testverfahren zurückführen. Wobei natürlich bei unterschiedlich geschätzten Paramter, man schon nicht das gleiche Resultate in der Teststatistik erhält.  Mit survreg wird mit einer approximativen Verteilung für den Wald-test gearbeitet, in der Fallstudie sind leider keine Angaben über das verwendete Verfahren vermerkt.
+
+\newpage
+
+
+
+Zur Beurteilung der Modelleignung schauen wir uns die Gumbel Residuen an (Abbildung \ref{fig:res}). 
+Im Tukey Anscombe erkennen wir, dass die Residuen etwas mehr unter 0 vertreten sind. Die Residuen der zensierten Beobachtungen liegen wie erwartet alle im oberen Wertebereich. Der QQ plot ziegt im unteren Bereich eine Abweichung, jedoch im oberen Bereich scheint es gut zu passen. 
+Folgt man diesen Argumenten, könnte man das Modell unter Vorbehalt gelten lassen, es ist sicher spannend noch weitere Anpassungen zu treffen um das Modell zu verbessern.
+
+```{r , include=T,eval=  F}
+plotGumbelRes(cAa.fitw,smooth = T)
+```
+
+```{r res, fig.align='center', out.width='100%', fig.cap="Residuenanalyse", echo=FALSE}
+knitr::include_graphics("gumbelres.jpeg")
+```
+Schlussendlich vergleichen wir noch MAD und MAPE der Predictions zu den beobachteten Daten miteinander, hier werden nur diejenigen Durationen geschätzt, welche nicht zensiert wurden.
+```{r , include=T,eval=  F}
+data=cAa[-which(cAa$duration==730),]
+weib.pred=predict(cAa.fitw,newdata=data)#Modell nur mit Beob < 730d 
+mean(abs((data$duration-weib.pred)/data$duration)) * 100 #MAPE  15.91463 %
+mad(weib.pred-data$duration) # Mad der Differenzen
+```
+
+
+Beim $MAPE = \frac{100}{n}\sum_{i = 1}^{n}\Big|\frac{observation_{t}-forecast_{t}}{observation_{t}}\Big|$ erhalten wir 15.91%, also 2 % mehr als in der Fallstudie. MAD ist ein robustes Streungsmass um die Streuung einer Stichprobe zu messen $MAD = \frac{1}{n}\sum_{i = 1}^{n}\Big|x_{t}-\tilde{x}\Big|$. Wenn wir den MAD der Differenzen berechnen, bekommen wir 48.44178 was auch ziemlich nahe am Wert der Fallstudie 45.97 liegt. Leider fehlt uns das Benchmarkmodell aus der Fallstudie, um dies mit unserem Modell zu vergleichen. Wenn man die Resultate aus der Fallstudie mit deren Koeffizienten und der Formel von "Hand" nachrechnet, erhält man  einen leicht anderen MAPE, das mag daran liegen, dass die Parameter nur in gerundeter Darstellung aufgeführt sind.
+
+\newpage
+### Aufgabe b) GAM
+
+Zuerst werden die Daten diskretisiert, die 5 Wochen (35 Tage)  machen Sinn, da sonst das Longformat zu gross wird.
+```{r , include=T,eval=  F}
+cAb=cAa;cAb$duration=(cAb$duration-1)%/%35+1 # diskretisieren auf 5 Wochen
+cAbL <- dataLong(cAb, timeColumn="duration", censColumn="censor") # ins longformat umwandlen
+cAbL$tNr <- as.integer(as.character(cAbL$timeInt)) # Zeit als int abspeichern.
+```
+
+```{r, include=F,echo=T}
+cAb=cAa;cAb$duration=(cAb$duration-1)%/%35+1 # diskretisieren auf 5 Wochen
+cAbL <- dataLong(cAb, timeColumn="duration", censColumn="censor") # ins longformat umwandlen
+cAbL$tNr <- as.integer(as.character(cAbL$timeInt))# Zeit als int abspeichern.
+cAbL.gam <- gam(y~lo(tNr)+acq_expense+acq_expense_sq+industry+revenue+employees+
+                  ret_expense+ret_expense_sq+crossbuy+frequency+frequency_sq, 
+                family=binomial(link="cloglog"),data=cAbL, maxit=50, bf.maxit=500)
+```
+
+Nun passen wir das Weibull Modell mit GAM über die Beziehung $log(-log(1-\lambda(t|\underline{x})))\approx\alpha_{0}+\alpha_{1}*log(t)+\underline{x}^ {T}\underline{\beta}$ an.
+
+```{r , include=T,eval=  F}
+cAbL.gam <- gam(y ~ lo(tNr)+lo(acq_expense)+lo(acq_expense_sq)+industry+lo(revenue)+lo(employees)+
+              lo(ret_expense)+lo(ret_expense_sq)+crossbuy+lo(frequency)+lo(frequency_sq), 
+              family=binomial(link="cloglog"),data=cAbL, maxit=50, bf.maxit=500)
+```
+
+
+```{r gam, fig.align='center', out.width='100%', fig.cap="partial res", echo=FALSE}
+knitr::include_graphics("gamlo.jpeg")
+```
+
+
+Interessant in Abbildung \ref{fig:gam} ist, dass bei acq/acq_sq   und frequency/frequency_sq die Steigung jeweils das umgekehrte Vorzeichen hat, in Abbildung \ref{fig:param} war zumindest freq_sq ja auch schon insignifikant. Wie in Abbildung \ref{fig:gam}, sowie auch  im summary output bei den nichtparametrischen Effekten ersichtlich, können alle Variabeln bis auf tNr linear modelliert werden, deswegen wird für die weitere Aufgabe das folgende Modell verwendet:
+  
+\newpage  
+  
+```{r , include=T,eval=  F}
+cAbL.gam <- gam(y ~ lo(tNr)+acq_expense+acq_expense_sq+ret_expense +ret_expense_sq+ 
+                crossbuy+frequency+frequency_sq + industry+revenue+employees, 
+                family=binomial(link="cloglog"),data=cAbL)
+cAbL.gam.haz <- predict(cAbL.gam, type="response")
+cAbL.gam.adR <- adjDevResidShort(dataSet=cAbL, hazards=cAbL.gam.haz)
+```
+
+
+Laut dem Output Abbildung  \ref{fig:adRes} \textcolor{blue}{blaues Quadrat} ist frequency_sq nicht signifikant, alle anderen Terme aber schon. Man muss hier extrem vorsichtig sein mit der Interpretation der Resultate, je nachdem wie man die erklärenden Variablen anordnet erhält man unterschiedliche Werte in den Teststatistiken. Folgt man zum Beispiel dem Summary output aus dem Modell mit den Glättern \ref{fig:gam}, sind alle Variabeln signifikant. Wir halten uns jedoch an die Anordnung wie im Fallbeispiel.
+
+
+```{r adRes, fig.align='center', out.width='100%', fig.cap="Residuen", echo=FALSE}
+knitr::include_graphics("all4.jpg")
+```
+
+Die Residuen in Abbildung \ref{fig:adRes} oben links scheinen im mittleren Bereich den Quantilen einer Normalverteilung zu folgen, geht man jedoch auf die beiden Enden zu (\textcolor{green}{grüne Elipsen}), weichen sie sehr stark davon ab. Man bemerkt die massive Skalierung der Residuen. Um zu verstehen warum diese Residuen so stark abweichen, entfernen wir noch die quadratischen Terme im Modell und sehen (rechts oben), dass noch ein Residuum abweicht (\textcolor{red}{roter Kreis}). 
+
+Dies ist eine Beobachtung welche man als Ausreisser klassifizieren könnte, wenn man in den Daten schaut hat diese gerade einmal eine Dauer von 5 Tagen und einen immens hohen acq_expense von 936, wobei im Mittel 650 bei acq_expense beobachtet wurde. Wenn man diesen Datenpunkt noch entfernt (unten links) haben wir noch die Langschwänzigkeit im oberen Bereich in welchem extreme Abweichungen vorliegen. Wenn man sich auf die Skalierung achtet, sind wir immernoch im gleichen Wertebereich wie vorhin. 
+Wir haben hier verschiedene Modelle ausprobiert, aber leider kommen wir zu keinem besseren Ergebnis.
+
+
+
+
+\newpage
+
+### GLM
+Nun passen wir das Modell noch mit GLM an. Aus dem GAM haben wir gesehen, dass frequency_SQ nicht signifikant ist. Wenn wir nun das volle Modell aus Aufgabe a) fitten und den Output im summary anschauen, sehen wir das wiederum ret_expense_SQ nicht signifikant ist.
+
+Deswegen lassen wir auch diesen Term weg und landen beim folgenden Modell:
+
+```{r , include=T,eval=  F}
+cAbL.glm <- glm(y ~ -1 + timeInt + acq_expense + acq_expense_sq + ret_expense +
+frequency + crossbuy + industry + revenue + employees,
+data=cAbL, family=binomial(link="cloglog"))
+```
+ 
+Nun berechnen wir noch die Residuen Abbildung \ref{fig:glmres}
+```{r , include=T,eval=  F}
+# Hazardrate
+cAbL.glm.haz <- predict(cAbL.glm, type="response")
+# Residuen
+cAbL.glm.adR <- adjDevResidShort(dataSet=cAbL, hazards=cAbL.glm.haz)
+#martingale residuen
+cAbL.glm.mR <- martingaleResid(cAb, censColumn="censor", linkFunc="cloglog",
+survModelFormula=duration ~ acq_expense + acq_expense_sq + ret_expense +
+frequency + crossbuy + industry + revenue + employees)
+```
+
+
+```{r glmres, fig.align='center', out.width='100%', fig.cap="Residuen", echo=FALSE}
+knitr::include_graphics("glmres2.jpg")
+```
+
+\newpage
+
+Die Martingale Residuen sehen eigentlich ok aus, streuen relativ gut um 0, bei Employees hat es eine kleine Abweichung im Glätter ganz rechts.
+Die Adjusted Devianz Residuen scheinen allerdings nicht besser zu sein als vorher mit dem GAM modell, auch die Skalierung ist ähnlich.
+
+### Ohne quadrierte Terme 
+
+Nun versuchen wir zum Schluss noch das Modell, ohne die quadrierten Terme zu berücksichtigen.
+
+
+```{r glmres3, fig.align='center', out.width='100%', fig.cap="Residuen ohne quadrierte Terme", echo=FALSE}
+knitr::include_graphics("glmres.jpg")
+```
+
+
+Bei den Adj residuen erfahren wir keine Verbesserung. Bei acq_expense und bei ret_expense könnte man noch mit Transformationen versuchen zu assistieren.
+
+Zähldaten können gemäss Tukeys First aid mit einer Wurzeltransformation umgewandelt werden. Jedoch auch die Transformationen scheinen hier keinen Mehrwert zu bringen.
+
+
+
+
+
