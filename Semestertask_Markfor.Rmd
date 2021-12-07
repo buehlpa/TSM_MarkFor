@@ -18,7 +18,6 @@ The model equation for MLR has the form  $y=X\Theta$ +$\epsilon$ ,with $y$ being
 
 ###  Dataset
 The data from 7 common fish species for fishmarket is provided from Kaggle.
-https://www.kaggle.com/aungpyaeap/fish-market*Note: the output is not shown to reduce space in the document full code and generation of the document can be found on https://github.com/buehlpa/TSM_MarkFor*
 
 ```{r, include=F,echo=T}
 library(GGally)
@@ -33,6 +32,9 @@ fish_dat=read_csv("Fish.csv")
 ```{r pairwise, fig.align='center', out.width='95%', fig.cap="pairwise plot of the fish dataset", echo=FALSE}
 knitr::include_graphics("fish_pairs.jpeg")
 ```
+
+\newpage
+
 ###  Data exploration
 
 Information of the Dataset is gained with the following commands. 
@@ -61,7 +63,7 @@ The distribution of the target variables is actually very important since MLR as
 
 
 To evaluate the accuracy of the model created in this chapter, the data set is split into a train and test set. We split the dataset using Simple Random Sampling without Replacement (SRSWR) in a ratio of 80% to 20%. 80% of the data is used for training and the remaining 20% is used to test prediction accuracy. The corresponding R code is given below.
-```{r , include=T,eval=  F}
+```{r , include=T,eval=  T}
 set.seed(42)                                         # Reproducable code
 Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch 
 samp= sample(1:56,size = 11,replace = F)             # sample size 80%
@@ -100,7 +102,7 @@ ggplot(Perch_train,aes(Width,Weight_sqrt)) +
   geom_point(color="#00B81F") +
   geom_smooth(method='lm',color="black") + theme_bw()
 ```
-From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $ 171.6$. The p-values for the both parameters are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can see that the model assumptions are met. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model, maybe the variance is slightly inflated.
+From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $ 171.6$. The p-values for the both parameters are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can see that the model assumptions of the . The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model.
 
 ```{r resid_perch,out.width='80%',fig.dim=c(5,3), fig.cap="Residuals for the Perchfit", echo=FALSE}
 knitr::include_graphics("Perch_res.jpeg")
