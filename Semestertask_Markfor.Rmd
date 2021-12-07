@@ -18,7 +18,7 @@ The model equation for MLR has the form  $y=X\Theta$ +$\epsilon$ ,with $y$ being
 
 ###  Dataset
 The data from 7 common fish species for fishmarket is provided from Kaggle.
-https://www.kaggle.com/aungpyaeap/fish-market
+https://www.kaggle.com/aungpyaeap/fish-market*Note: the output is not shown to reduce space in the document full code and generation of the document can be found on https://github.com/buehlpa/TSM_MarkFor*
 
 ```{r, include=F,echo=T}
 library(GGally)
@@ -35,7 +35,7 @@ knitr::include_graphics("fish_pairs.jpeg")
 ```
 ###  Data exploration
 
-Information of the Dataset is gained with the following commands. *Note: the output is not shown to reduce space in the document full code and generation pf document can be found on https://github.com/buehlpa/TSM_MarkFor*
+Information of the Dataset is gained with the following commands. 
 ```{r , include=T,eval=  F}
 fish_dat=readr::read_csv("Fish.csv")                        #  reading as tibble
 GGally::ggpairs(fish_dat,aes(color = Species)) + theme_bw() #  pairwise plot 
@@ -45,7 +45,7 @@ summary(fish_dat);str(fish_dat)                             #  statistics and st
 The pairwise plot Figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the Species. The coloring in the pairwise plot allows a distinction of the Species, one can immediately observe that the species Perch has the most observations.
 
 From the pairwise scatterplots  a nonlinear relation between weight and the other numerical variables is observed, therefore the correlation *cannot* be correctly interpreted with these variablepairs.
-Further the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other.
+Further the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other.The length of the fish is measured in different ways, which is why there are three different Length1 (vertical length), Length2 (diagonal length) and Length3 (cross length).
 
 The density plots helps see how the variables themselves are distributed. For example the width of Smelt tends to have a bidmodal distribution, altough this has to be taken with a grain of salt due to the sparse data, see on the inverted histograms on the left. 
 Also the pairwise boxplots gives a good overview for comparison between the different variables. For example it can be seen that the variance of the species vary amongst the levels.
@@ -57,33 +57,50 @@ The distribution of the target variables is actually very important since MLR as
 
 ###  Building a Model
 
+
+
+
+To evaluate the accuracy of the model created in this chapter, the data set is split into a train and test set. We split the dataset using Simple Random Sampling without Replacement (SRSWR) in a ratio of 80% to 20%. 80% of the data is used for training and the remaining 20% is used to test prediction accuracy. The corresponding R code is given below.
+```{r , include=T,eval=  F}
+set.seed(42)                                         # Reproducable code
+Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch 
+samp= sample(1:56,size = 11,replace = F)             # sample size 80%
+Perch_train=Perch_dat[-samp,]                        # train sample
+Perch_test =Perch_dat[samp,]                         #test sample
+``` 
+
+
+Because of multicolinearity, the first thing we want to do is fit a simple linear regression model. We use the weight of a fish as a response variable. We use the explanatory variable width, since this is intuitively a good indicator for the weight of a fish from "fishing experience". In a next step, we will also check whether a MLR model can fit the data even better. Finally, the models are compared quantitatively with the residual sum of squares (RSS), R-squared and the Akaike information criterion (AIC). Subsequently, the models will be used with the test set for predictions, whose performance  will be measured with the Mean Squared Error (MSE).
+
+
 The dataset provides many different options to do linear regression, nevertheless for MLR there is a problem with multicollinearity since a lot of the variables are strongly correlated, meaning that if multiple independent variables would be in the model it wouldn't be clear which one explains the effect the best for the target variable.
 
-For a first approach we could just focus on the species Perch (in swiss-german it's called Egli) since we have the most data there. Lets find a Model for Predicting the weight of this particular species with the variables width height and length. Since  the weight hasn't got a linear relation to the other variables, we'll transform it properly.
+
+For a first approach we could just focus on the species Perch (in swiss-german it's called Egli) since we have the most data there. Lets find a model for predicting the weight of this particular species with the variables width. Since  the weight hasn't got a linear relation to the other variables, we'll transform it properly.
 
 
 
 ```{r transformation, include=T,echo=  F,fig.dim=c(8,2) , fig.cap="transformations of weight for Perch"}
-Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch")                           #  Use only Perch data
-nPlt=ggplot(Perch_dat,aes(Width,Weight))+geom_point(color="#00B81F")+ theme_bw()
+                          #  Use only Perch data
+nPlt=ggplot(Perch_train,aes(Width,Weight))+geom_point(color="#00B81F")+ theme_bw()
 
 #  plot 
-logPlt=ggplot(Perch_dat,aes(Width,log(Weight)))+geom_point(color="#00B81F")  + theme_bw()                  
-sqrtPlt=ggplot(Perch_dat,aes(Width,sqrt(Weight)))+geom_point(color="#00B81F")+ theme_bw()
+logPlt=ggplot(Perch_train,aes(Width,log(Weight)))+geom_point(color="#00B81F")  + theme_bw()                  
+sqrtPlt=ggplot(Perch_train,aes(Width,sqrt(Weight)))+geom_point(color="#00B81F")+ theme_bw()
 ggpubr::ggarrange(nPlt, logPlt, sqrtPlt,labels = c("   Default", "Logarithm", "Square root"),ncol = 3, nrow = 1)
 ```
 If we transform the weight with the logarithm it looks a bit better but still isn't linear see Figure \ref{fig:transformation}. The squareroot transformation seems to be the right one. Now the data seems much more linearly dependent. Therefore a first model can be set up
 ```{r , include=T,eval=  T,echo=T}
-Perch_fit=lm(sqrt(Weight)~Width,data = Perch_dat) #  Simple linear regression model
+Perch_fit=lm(sqrt(Weight)~Width,data = Perch_train) #  Simple linear regression model
 ``` 
 
 ```{r lm_perch, include=T,echo=  F,fig.dim=c(6,2), fig.cap="linear regression model for Perch weigth vs width"}
-Perch_dat$Weight_sqrt=sqrt(Perch_dat$Weight)
-ggplot(Perch_dat,aes(Width,Weight_sqrt)) +
+Perch_train$Weight_sqrt=sqrt(Perch_train$Weight)
+ggplot(Perch_train,aes(Width,Weight_sqrt)) +
   geom_point(color="#00B81F") +
   geom_smooth(method='lm',color="black") + theme_bw()
 ```
-From the summary output we get the following model $Weight_{i}=(-5.5245 + 4.8571 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9719$ very high. the $AIC$ for this model is $206.76$. The p-values for the both parameters are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can see that the model assumptions are met. The residuals seem to follow a normal distribution, have constant variance, constant mean and there are no points which are crucial to shift the model.
+From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $ 171.6$. The p-values for the both parameters are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can see that the model assumptions are met. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model, maybe the variance is slightly inflated.
 
 ```{r resid_perch,out.width='80%',fig.dim=c(5,3), fig.cap="Residuals for the Perchfit", echo=FALSE}
 knitr::include_graphics("Perch_res.jpeg")
