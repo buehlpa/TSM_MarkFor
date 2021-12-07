@@ -110,7 +110,7 @@ car::vif(Perch_fit_full)
 drop1(Perch_fit_full)
 ``` 
 
-Vif tells us that all the variables have very high kollinearity ( as expected) whereas the vif of the lengths is massively hiigher than of the other varibles.
+The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables. 
 
 
 
