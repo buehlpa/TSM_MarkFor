@@ -20,12 +20,14 @@ dim(Perch_dat)
 set.seed(42);samp= sample(x = 1:56,size = 11,replace = FALSE)
 Perch_dat=Perch_dat[-samp,]
 
-
+Perch_fit=lm(sqrt(Weight)~Width,data = Perch_train)
 
   
+
+
 par(mfrow=c(1,3))
 plot(Weight~Width,data=Perch_dat)
-plot(log(Weight)~Width,data=Perch_dat)
+plot(1/Weight~Width,data=Perch_dat)
 plot(sqrt(Weight)~Width,data=Perch_dat)
 
 library("ggpubr")
@@ -38,10 +40,15 @@ figure <- ggarrange(nPlt, logPlt, sqrtPlt,labels = c("A", "B", "C"),ncol = 3, nr
 
 
 
-par(mfrow=c(2,2))
+par(mfrow=c(1,4))
 plot(Perch_fit)
 
 Perch_fit=lm(sqrt(Weight)~.,data = Perch_dat[,-1]) #  linear Regression model
+
+AIC(Perch_fit)
+
+
+predict()
 
 library(car)
 
@@ -49,6 +56,14 @@ summary(Perch_fit)
 car::vif(Perch_fit)
 drop1(Perch_fit)
 ?drop1
+
+
+
+
+
+
+
+
 
 
 

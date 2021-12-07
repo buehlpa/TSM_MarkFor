@@ -35,13 +35,14 @@ knitr::include_graphics("fish_pairs.jpeg")
 
 \newpage
 
+
 ###  Data exploration
 
 Information of the Dataset is gained with the following commands. 
 ```{r , include=T,eval=  F}
 fish_dat=readr::read_csv("Fish.csv")                        #  reading as tibble
 GGally::ggpairs(fish_dat,aes(color = Species)) + theme_bw() #  pairwise plot 
-summary(fish_dat);str(fish_dat)                             #  statistics and structure
+summary(fish_dat);str(fish_dat);View(fish_dat)              #  statistics and structure
 ``` 
 
 The pairwise plot Figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the Species. The coloring in the pairwise plot allows a distinction of the Species, one can immediately observe that the species Perch has the most observations.
@@ -54,82 +55,91 @@ Also the pairwise boxplots gives a good overview for comparison between the diff
 
 The distribution of the target variables is actually very important since MLR assumes multivariate normality of the data, for other distributions we might choose another model such as a Generalized-Linear-Model to improve the model validity, but for this analysis we stick to MLR.
 
-
+```{r, include=F,echo=T}
+Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch 
+```
 
 
 ###  Building a Model
 
+To evaluate the accuracy of the model created in this chapter, the data is split into a train and test set,  using Simple Random Sampling without Replacement (SRSWR). 80% of the data is used for training and the remaining 20% is for testing prediction accuracy. The corresponding R code is given below.
 
 
-
-To evaluate the accuracy of the model created in this chapter, the data set is split into a train and test set. We split the dataset using Simple Random Sampling without Replacement (SRSWR) in a ratio of 80% to 20%. 80% of the data is used for training and the remaining 20% is used to test prediction accuracy. The corresponding R code is given below.
 ```{r , include=T,eval=  T}
-set.seed(42)                                         # Reproducable code
-Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch 
-samp= sample(1:56,size = 11,replace = F)             # sample size 80%
-Perch_train=Perch_dat[-samp,]                        # train sample
-Perch_test =Perch_dat[samp,]                         #test sample
-``` 
-
-
-Because of multicolinearity, the first thing we want to do is fit a simple linear regression model. We use the weight of a fish as a response variable. We use the explanatory variable width, since this is intuitively a good indicator for the weight of a fish from "fishing experience". In a next step, we will also check whether a MLR model can fit the data even better. Finally, the models are compared quantitatively with the residual sum of squares (RSS), R-squared and the Akaike information criterion (AIC). Subsequently, the models will be used with the test set for predictions, whose performance  will be measured with the Mean Squared Error (MSE).
-
+set.seed(42);samp= sample(1:56,size = 11,replace = F)       # Seed & sample size 80%
+Perch_train=Perch_dat[-samp,];Perch_test=Perch_dat[samp,] # train / test sample
+```
 
 The dataset provides many different options to do linear regression, nevertheless for MLR there is a problem with multicollinearity since a lot of the variables are strongly correlated, meaning that if multiple independent variables would be in the model it wouldn't be clear which one explains the effect the best for the target variable.
 
+Therefore the first thing we do is fitting a simple linear regression model. We use the weight of a fish as a response variable. The  explanatory variable width is used, since this is intuitively a good indicator for the weight of a fish from "fishing experience". In a next step, we will also check whether a MLR model can represent the data even better.
 
-For a first approach we could just focus on the species Perch (in swiss-german it's called Egli) since we have the most data there. Lets find a model for predicting the weight of this particular species with the variables width. Since  the weight hasn't got a linear relation to the other variables, we'll transform it properly.
+Finally, the models are compared quantitatively with the residual sum of squares (RSS), R-squared and the Akaike information criterion (AIC). Subsequently, the models will be used with the test set for predictions, whose performance  will be measured with the Mean Absolute Deviation(MAD). The reason why we don't use Mean Squared Error(MSE) is because of the small test set, one far point could massively influence the statistic due to the square.
+
+###  Simple Linear Regression
+
+For a first approach we could just focus on the species Perch (in swiss-german it's called Egli) since we have the most data there. Since  the weight hasn't got a linear relation to the other variables, we'll have to transform it properly.
 
 
 
 ```{r transformation, include=T,echo=  F,fig.dim=c(8,2) , fig.cap="transformations of weight for Perch"}
                           #  Use only Perch data
-nPlt=ggplot(Perch_train,aes(Width,Weight))+geom_point(color="#00B81F")+ theme_bw()
+nPlt=ggplot(Perch_train,aes(Width,Weight))+geom_point(color="#5BB300")+ theme_bw()
 
 #  plot 
-logPlt=ggplot(Perch_train,aes(Width,log(Weight)))+geom_point(color="#00B81F")  + theme_bw()                  
-sqrtPlt=ggplot(Perch_train,aes(Width,sqrt(Weight)))+geom_point(color="#00B81F")+ theme_bw()
+logPlt=ggplot(Perch_train,aes(Width,log(Weight)))+geom_point(color="#5BB300")  + theme_bw()                  
+sqrtPlt=ggplot(Perch_train,aes(Width,sqrt(Weight)))+geom_point(color="#5BB300")+ theme_bw()
 ggpubr::ggarrange(nPlt, logPlt, sqrtPlt,labels = c("   Default", "Logarithm", "Square root"),ncol = 3, nrow = 1)
 ```
-If we transform the weight with the logarithm it looks a bit better but still isn't linear see Figure \ref{fig:transformation}. The squareroot transformation seems to be the right one. Now the data seems much more linearly dependent. Therefore a first model can be set up
+
+If we transform the weight with the logarithm it looks a bit better but still isn't linear see Figure \ref{fig:transformation}. The squareroot transformation looks better, the data seems much more linearly dependent.One can observe that the  variance towards the right side of the model increases even with after the transformations.
+
 ```{r , include=T,eval=  T,echo=T}
 Perch_fit=lm(sqrt(Weight)~Width,data = Perch_train) #  Simple linear regression model
 ``` 
 
-```{r lm_perch, include=T,echo=  F,fig.dim=c(6,2), fig.cap="linear regression model for Perch weigth vs width"}
+```{r lm_perch, include=T,echo=  F,fig.dim=c(6,1.8), fig.cap="Simple linear regression model for Species Perch weigth vs width"}
 Perch_train$Weight_sqrt=sqrt(Perch_train$Weight)
 ggplot(Perch_train,aes(Width,Weight_sqrt)) +
-  geom_point(color="#00B81F") +
-  geom_smooth(method='lm',color="black") + theme_bw()
-```
-From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $ 171.6$. The p-values for the both parameters are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can see that the model assumptions of the . The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model.
-
-```{r resid_perch,out.width='80%',fig.dim=c(5,3), fig.cap="Residuals for the Perchfit", echo=FALSE}
-knitr::include_graphics("Perch_res.jpeg")
+  geom_point(color="#5BB300") +
+  geom_smooth(method='lm',color="black",fill="red") + theme_bw()
 ```
 
+From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $171.6$. The p-values for the both parameters hypothesis tests are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can check the model assumptions. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model. Nevertheless the variance is not constant and increases towards the right side. 
+
+```{r resid_perch,out.width='100%',fig.dim=c(5,3), fig.cap="Residualanalysis for the SLR ", echo=FALSE}
+knitr::include_graphics("Residuals_1_4.jpeg")
+```
+
+\newpage
+
+###  Multiple Linear Regression
+
+Lets make now a full model and test if it is more beneficial.
+
+```{r , include=F,echo=T}
+Perch_fit_full=lm(sqrt(Weight)~.,data = Perch_dat[,-1])                #  MLR
+car::vif(Perch_fit_full);drop1(Perch_fit_full);summary(Perch_fit_full) #  VIF, drop1, output
+```
+
+The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables.
+
+The problem is also visible as the summary output is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*. 
 
 
-```{r , include=T,echo=F,eval=  F}
-summary(Perch_fit)
-AIC(Perch_fit)
 
+
+```{r lm_perch, include=T,echo=  F,fig.dim=c(6,1.8), fig.cap="Simple linear regression model for Species Perch weigth vs width"}
+mad(predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))            # 0.4947488
+mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4694862
+ 
+0.1*(sum((predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))^2))  # 1.045417   #exactly here is the problem with mse
+0.1*(sum((predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))^2))       # 1.539654
 ```
 
 
 &nbsp;
 
-The way we have chosen is starting with a sparse model. Lets make now a full model and test if a larger model is more beneficial. The multicollinearity is checked with Variance Inflation Factor and a F test checks the importance of the variables
-
-
-```{r , include=T,eval=  T,echo=T}
-Perch_fit_full=lm(sqrt(Weight)~.,data = Perch_dat[,-1]) #  Multiple linear regression model
-summary(Perch_fit_full)
-car::vif(Perch_fit_full)
-drop1(Perch_fit_full)
-``` 
-
-The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables. 
 
 
 
@@ -137,3 +147,5 @@ The VIF helps us to identify multicollinearity and indicates that the variables 
 
 
 
+
+*[1] Multicollinearity and Regression Analysis,  December 2017,Journal of Physics Conference Series 949(1):012009, Jamal Daoud*

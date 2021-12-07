@@ -8,6 +8,7 @@ header-includes:
 - \usepackage{amsmath}
 - \usepackage{placeins}
 - \usepackage{caption}
+
 ---
 \captionsetup[figure]{name=Abbildung}
 \captionsetup[table]{name=Tabelle}
