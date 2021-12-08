@@ -117,24 +117,43 @@ knitr::include_graphics("Residuals_1_4.jpeg")
 
 Lets make now a full model and test if it is more beneficial.
 
-```{r , include=F,echo=T}
+
+```{r ,echo=T, include=F,eval=T}
+Perch_fit_full=lm(sqrt(Weight)~.,data = Perch_dat[,-1])                #  MLR
+```
+
+```{r ,echo=T, include=T,eval=F}
 Perch_fit_full=lm(sqrt(Weight)~.,data = Perch_dat[,-1])                #  MLR
 car::vif(Perch_fit_full);drop1(Perch_fit_full);summary(Perch_fit_full) #  VIF, drop1, output
 ```
 
+```{r MLR_output,out.width='100%',fig.dim=c(5,3), fig.cap="VIF, MLR Output and Drop1 Global F-test", echo=FALSE}
+knitr::include_graphics("MLR_output.jpg")
+```
+
+
 The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables.
 
-The problem is also visible as the summary output is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*. 
+The problem is also visible as the summary output in Figure \ref{fig:MLR_output} is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*. According to that research paper we can't reliably interpret these statistics. 
+
+Nevertheless we remove the Length variables and fit a model with two explanatory variables for a final comparison.
+
+```{r ,echo=T, include=T,eval=T}
+Perch_fit_full=lm(sqrt(Weight)~Width+Height,data = Perch_dat[,-1])       
+summary(Perch_fit_two)#  MLR
+```
 
 
 
 
-```{r lm_perch, include=T,echo=  F,fig.dim=c(6,1.8), fig.cap="Simple linear regression model for Species Perch weigth vs width"}
+```{r , include=T,echo=  F,}
 mad(predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))            # 0.4947488
 mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4694862
- 
+
+
 0.1*(sum((predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))^2))  # 1.045417   #exactly here is the problem with mse
 0.1*(sum((predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))^2))       # 1.539654
+
 ```
 
 
@@ -147,5 +166,9 @@ mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4
 
 
 
+## Appendix
+*This work is generated in R-Studio 2021.09.0 with R-4.1 with Rmarkdown, Full Code and Project can be found on https://github.com/buehlpa/TSM_MarkFor*
+
+### Literature
 
 *[1] Multicollinearity and Regression Analysis,  December 2017,Journal of Physics Conference Series 949(1):012009, Jamal Daoud*
