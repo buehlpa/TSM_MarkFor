@@ -14,7 +14,7 @@ knitr::opts_chunk$set(message  = F)
 knitr::opts_chunk$set(fig.align = "center")
 ```
 ###  Short Theory Recap Multiple Linear Regression (MLR)
-The model equation for MLR has the form  $y=X\Theta$ +$\epsilon$ ,with $y$ being the target vector, $X$ the explanatory Matrix,$\Theta$ the parameter vector and the residuals with the assumption that they are normally distributed  $\epsilon$ ~  $N(0,\sigma^{2})$. The estimation of $\Theta$ is done with the Maxium likelihood  $L(\theta)=P(X|\theta)=\frac{1}{\sqrt(2\pi)\sigma}*e^{-\frac{1}{2\sigma^{2}}*||y-\theta X||^{2}}$ by solving the equation $\Theta=(X^{T}X)^{-1}X^{T}y$.
+The model equation for MLR has the form  $y=X\Theta$ +$\epsilon$ ,with $y$ being the target vector, $X$ the explanatory Matrix,$\Theta$ the parameter vector and the residuals with the assumption that they are normally distributed  $\epsilon$ ~  $N(0,\sigma^{2})$. The estimation of $\Theta$ is done with the Maxium likelihood  $L(\theta)=P(X|\theta)=\frac{1}{\sqrt(2\pi)\sigma}*e^{-\frac{1}{2\sigma^{2}}*||y-\theta X||^{2}}$ by solving the equation $\Theta=(X^{T}X)^{-1}X^{T}y$*(1)*.
 
 ###  Dataset
 The data from 7 common fish species for fishmarket is provided from Kaggle.
@@ -113,7 +113,7 @@ knitr::include_graphics("Residuals_1_4.jpeg")
 
 \newpage
 
-###  Multiple Linear Regression
+###  Multiple Linear Regression and the Problem of Multicollinearity
 
 Lets make now a full model and test if it is more beneficial.
 
@@ -134,17 +134,19 @@ knitr::include_graphics("MLR_output.jpg")
 
 The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables.
 
-The problem is also visible as the summary output in Figure \ref{fig:MLR_output} is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*. According to that research paper we can't reliably interpret these statistics. 
+The problem is also visible as the summary output in Figure \ref{fig:MLR_output} is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*.
 
-Nevertheless we remove the Length variables and fit a model with two explanatory variables for a final comparison.
+According to that research paper we can't reliably interpret these statistics. Further if there would be a full correlation between 2 variables meaning that $X_{1}$ would be a linear combination of $X_{2}$, the Covariance $\frac{1}{n}X^{T}X$ wouldn't have an inverse and *(1)* cannot be solved. With PCA we could check which of the variables explain the most variance and then remove the "unimportant" ones.
+
+Due to the task limitation we just keep this consideration in mind and simply remove the Length variables and fit a model with two explanatory variables for a final comparison.
 
 ```{r ,echo=T, include=T,eval=T}
 Perch_fit_full=lm(sqrt(Weight)~Width+Height,data = Perch_dat[,-1])       
-summary(Perch_fit_two)#  MLR
+summary(Perch_fit_full)#  MLR
 ```
 
 
-
+### Comparison of the two models 
 
 ```{r , include=T,echo=  F,}
 mad(predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))            # 0.4947488
@@ -156,6 +158,8 @@ mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4
 
 ```
 
+
+###Conclusion
 
 &nbsp;
 
