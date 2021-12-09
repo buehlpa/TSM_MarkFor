@@ -3,7 +3,8 @@
 library(GGally)
 library(readr)
 library(ggplot2)
-library("ggpubr")
+library(ggpubr)
+library(scatterplot3d) 
 
 
 #read the data and plot it
@@ -35,8 +36,8 @@ Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch")
 dim(Perch_dat)
 set.seed(42)
 samp= sample(x = 1:56,size = 11,replace = FALSE)
-Perch_train=Perch_train[-samp,]
-Perch_test=Perch_dat_test[samp,]
+Perch_train=Perch_dat[-samp,]
+Perch_test=Perch_dat[samp,]
 
 
 
@@ -85,8 +86,46 @@ mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4
 
 
 
+
+library(lattice)
+?cloud
+
+
+
+Perch_fit_two=lm(Weight~.,data = Perch_sub) 
+
+
+Perch_sub=Perch_train[,c(2,6,7)]
+Perch_sub$Weight=sqrt(Perch_sub$Weight)
+
+# 3D scatter plot
+s3d <- scatterplot3d(Perch_sub, type = "p", color = "blue",
+                     angle=55, pch = 16)
+# Add regression plane
+s3d$plane3d(Perch_fit_two)
+
+
+install.packages("rockchalk")
+
+
+library(rockchalk)
+
+#m1 = lm(mpg ~ poly(wt,2) + disp, data=mtcars)
+
+old.par = par(mfrow=c(1,2), mar=c(1,1,1,1))
+
+plotPlane(Perch_fit_two, "Height", "Width", pch=16, pcol=rgb(91,179,0,maxColorValue=255),col=rgb(0,0,1,0.1), drawArrows=TRUE, alength=0, 
+          acol="red", alty=1,alwd=3, theta=5, phi=20)
+
+
+
+plotPlane(m1, "wt", "disp", pch=16, col=rgb(0,0,1,0.1), drawArrows=TRUE, alength=0, 
+          acol="red", alty=1,alwd=1, theta=35, phi=25)
+
+
+
 #deccorelate d ata
 
 
-
+?rgb
 
