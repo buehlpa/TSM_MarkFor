@@ -149,7 +149,7 @@ Perch_fit_two=lm(sqrt(Weight)~Width+Height,data = Perch_dat[,-1])
 summary(Perch_fit_two)#  MLR
 ```
 
-```{r lm_two_output,out.width='80%',fig.dim=c(5,3), fig.cap="MLR  two in 3 dimensions, summary output ", echo=FALSE}
+```{r lm_two_output,out.width='80%',fig.dim=c(5,3), fig.cap="Left: Visualization 3d, Rigth: Results from the model comparison", echo=FALSE}
 knitr::include_graphics("lm_two output.jpg")
 ```
 
@@ -160,28 +160,21 @@ Perch_fit_two=lm(sqrt(Weight)~Width+Height,data=Perch_dat[,-1])
 
 
 
+### Results 
+
+In the end we can compare the 3 models with the earlier mentioned measurements. The Distinction is made for measurements concerning the model itself how well it fits the data and the predictions which were made with the model for the test data. 
+
+The  RSS is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores. The AIC is also better for the bigger model. The behaviour of the AIC is decreasing and after a minima it increases again therefore the AIC probably isn't at a minima. 
+
+The $R^{2}$ isn't that much different from each other, whereas here is also to add: the more variables are in the model, the closer gets the measurement to 1
+
+MSE and MAD look quite the same for all of the three models
 
 
-### Comparison of the two models 
+### Conclusion
 
-```{r , include=T,echo=  F,}
-mad(predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))            # 0.4947488
-mad(predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))                 # 0.4694862
-
-0.1*(sum((predict(Perch_fit_full,Perch_test)-sqrt(Perch_test$Weight))^2))  # 1.045417   #exactly here is the problem with mse
-0.1*(sum((predict(Perch_fit,Perch_test)-sqrt(Perch_test$Weight))^2))       # 1.539654
-
-```
-
-
-###Conclusion
-
-&nbsp;
-
-
-
-
-
+Einstein once said quote: "Make everything as simple as possible, but not simpler".
+This is wonderfully consistent with modeling, we can see that the small model still leads to good predictions and we don't have to go to higher dimentions if a relation can be explained very well with two variables. 
 
 
 
