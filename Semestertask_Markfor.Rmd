@@ -1,7 +1,7 @@
 ---
 title: "Market Forecasting Assignment: Multiple Linear Regression"
 author: "Teacher: Dr. Stefan Groesser, Dr. Christoph Imboden"
-date: "Autors: Benedech Rodolpho, Buehler Pascal, Geeler Ken 04.12.2021"
+date: "Autors: Benedech Rodolfo, Buehler Pascal, Geeler Ken, 04.12.2021"
 output:
   pdf_document: default
 ---
@@ -45,13 +45,13 @@ GGally::ggpairs(fish_dat,aes(color = Species)) + theme_bw() #  pairwise plot
 summary(fish_dat);str(fish_dat);View(fish_dat)              #  statistics and structure
 ``` 
 
-The pairwise plot Figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the Species. The coloring in the pairwise plot allows a distinction of the Species, one can immediately observe that the species Perch has the most observations.
+The pairwise plot Figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the Species. The colouring in the pairwise plot allows a distinction of the Species, one can immediately observe that the species Perch has the most observations.
 
-From the pairwise scatterplots  a nonlinear relation between weight and the other numerical variables is observed, therefore the correlation *cannot* be correctly interpreted with these variablepairs.
-Further the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other.The length of the fish is measured in different ways, which is why there are three different Length1 (vertical length), Length2 (diagonal length) and Length3 (cross length).
+From the pairwise scatter plots  a nonlinear relation between weight and the other numerical variables is observed, therefore the correlation *cannot* be correctly interpreted with these variable pairs.
+Further the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other. The length of the fish is measured in different ways, which is why there are three different Length1 (vertical length), Length2 (diagonal length) and Length3 (cross length).
 
-The density plots helps see how the variables themselves are distributed. For example the width of Smelt tends to have a bidmodal distribution, altough this has to be taken with a grain of salt due to the sparse data, see on the inverted histograms on the left. 
-Also the pairwise boxplots gives a good overview for comparison between the different variables. For example it can be seen that the variance of the species vary amongst the levels.
+The density plots help see how the variables themselves are distributed. For example, the width of Smelt tends to have a bimodal distribution, although this must be taken with a grain of salt due to the sparse data, see on the inverted histograms on the left. 
+Also, the pairwise boxplots give a good overview for comparison between the different variables. For example, it can be seen that the variance of the species varies amongst the levels.
 
 The distribution of the target variables is actually very important since MLR assumes multivariate normality of the data, for other distributions we might choose another model such as a Generalized-Linear-Model to improve the model validity, but for this analysis we stick to MLR.
 
@@ -62,7 +62,7 @@ Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch
 
 ###  Building a Model
 
-To evaluate the accuracy of the model created in this chapter, the data is split into a train and test set,  using Simple Random Sampling without Replacement (SRSWR). 80% of the data is used for training and the remaining 20% is for testing prediction accuracy. The corresponding R code is given below.
+To evaluate the accuracy of the model created in this chapter, the data is split into a train and test set, using Simple Random Sampling without Replacement (SRSWR). 80% of the data is used for training and the remaining 20% is for testing prediction accuracy. The corresponding R code is given below.
 
 
 ```{r , include=T,eval=  T}
@@ -72,14 +72,13 @@ Perch_train=Perch_dat[-samp,];Perch_test=Perch_dat[samp,] # train / test sample
 
 The dataset provides many different options to do linear regression, nevertheless for MLR there is a problem with multicollinearity since a lot of the variables are strongly correlated, meaning that if multiple independent variables would be in the model it wouldn't be clear which one explains the effect the best for the target variable.
 
-Therefore the first thing we do is fitting a simple linear regression model. We use the weight of a fish as a response variable. The  explanatory variable width is used, since this is intuitively a good indicator for the weight of a fish from "fishing experience". In a next step, we will also check whether a MLR model can represent the data even better.
+Therefore, the first thing we do is fitting a simple linear regression model. We use the weight of a fish as a response variable. The explanatory variable width is used, since this is intuitively a good indicator for the weight of a fish from "fishing experience". In a next step, we will also check whether a MLR model can represent the data even better.
 
-Finally, the models are compared quantitatively with the residual sum of squares (RSS), R-squared and the Akaike information criterion (AIC). Subsequently, the models will be used with the test set for predictions, whose performance  will be measured with the Mean Absolute Deviation(MAD) and the MSE. The reason why we not only use Mean Squared Error(MSE) is because of the small test set, one far point could massively influence the statistic due to the square.
+Finally, the models are compared quantitatively with the residual sum of squares (RSS), R-squared and the Akaike information criterion (AIC). Subsequently, the models will be used with the test set for predictions, whose performance will be measured with the Mean Absolute Deviation (MAD) and the MSE. The reason why we not only use Mean Squared Error (MSE) is because of the small test set, one far point could massively influence the statistic due to the square.
 
 ###  Simple Linear Regression
 
-For a first approach we could just focus on the species Perch (in swiss-german it's called Egli) since we have the most data there. Since  the weight hasn't got a linear relation to the other variables, we'll have to transform it properly.
-
+For a first approach we could just focus on the species Perch (in Swiss-German it's called Egli) since we have the most data there. Since the weight hasn't got a linear relation to the other variables, we'll have to transform it properly.
 
 
 ```{r transformation, include=T,echo=  F,fig.dim=c(8,2) , fig.cap="transformations of weight for Perch"}
@@ -92,7 +91,7 @@ sqrtPlt=ggplot(Perch_train,aes(Width,sqrt(Weight)))+geom_point(color="#5BB300")+
 ggpubr::ggarrange(nPlt, logPlt, sqrtPlt,labels = c("   Default", "Logarithm", "Square root"),ncol = 3, nrow = 1)
 ```
 
-If we transform the weight with the logarithm it looks a bit better but still isn't linear see Figure \ref{fig:transformation}. The squareroot transformation looks better, the data seems much more linearly dependent.One can observe that the  variance towards the right side of the model increases even with after the transformations.
+If we transform the weight with the logarithm it looks a bit better but still isn't linear see Figure \ref{fig:transformation}. The square root transformation looks better, the data seems much more linearly dependent. One can observe that the  variance towards the right side of the model increases even with after the transformations.
 
 &nbsp;
 
@@ -109,7 +108,7 @@ ggplot(Perch_train,aes(Width,Weight_sqrt)) +
   geom_smooth(method='lm',color="black",fill="red") + theme_bw()
 ```
 
-From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $171.6$. The p-values for the both parameters hypothesis tests are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can check the model assumptions [2]. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model. Nevertheless the variance is not constant and increases towards the right side. 
+From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained Variance measurement $R^{2}$ is with $0.9683$ very high. the $AIC$ for this model is $171.6$. The p-values for the both parameters hypothesis tests are also significant. By inspecting the residuals in Figure \ref{fig:resid_perch} we can check the model assumptions [2]. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model. Nevertheless, the variance is not constant and increases towards the right side. 
 
 ```{r resid_perch,out.width='100%',fig.dim=c(5,3), fig.cap="Residualanalysis for the SLR ", echo=FALSE}
 knitr::include_graphics("Residuals_1_4.jpeg")
@@ -138,11 +137,11 @@ knitr::include_graphics("MLR_output.jpg")
 
 The VIF helps us to identify multicollinearity and indicates that the variables have a very high collinearity as expected. Especially the three variables of the lengths result in massively higher VIF values than for the other variables.
 
-The problem is also visible as the summary output in Figure \ref{fig:MLR_output} is examined. The variables Length1 Length2 and Length3 aren't even significant altough they are highly correlated with the target. This is because the collinearity inflates the standarderror which leads to insignificant t-statistics *[1]*.
+The problem is also visible as the summary output in Figure \ref{fig:MLR_output} is examined. The variables Length1 Length2 and Length3 aren't even significant although they are highly correlated with the target. This is because the collinearity inflates the standard error which leads to insignificant t-statistics *[1]*.
 
-According to that research paper we can't reliably interpret these statistics. Further if there would be a full correlation between 2 variables meaning that $X_{1}$ would be a linear combination of $X_{2}$, the Covariance $\frac{1}{n}X^{T}X$ wouldn't have an inverse and *(1)* cannot be solved, altough in the computer the estimation is done by minimizing the $RSS(\theta)$ and therefore we get results. With PCA we could check which of the variables explain the most variance and then remove the "unimportant" ones.
+According to that research paper we can't reliably interpret these statistics. Further if there would be a full correlation between 2 variables meaning that $X_{1}$ would be a linear combination of $X_{2}$, the Covariance $\frac{1}{n}X^{T}X$ wouldn't have an inverse and *(1)* cannot be solved, although in the computer the estimation is done by minimizing the $RSS(\theta)$ and therefore we get results. With PCA we could check which of the variables explain the most variance and then remove the "unimportant" ones.
 
-Due to the task limitation we just keep this consideration in mind and simply remove the Length variables and fit a model with two explanatory variables for a final comparison.
+Due to the task limitation, we just keep this consideration in mind and simply remove the Length variables and fit a model with two explanatory variables for a final comparison.
 
 ```{r ,echo=T, include=T,eval=F}
 Perch_fit_two=lm(sqrt(Weight)~Width+Height,data = Perch_dat[,-1])       
@@ -164,19 +163,17 @@ Perch_fit_two=lm(sqrt(Weight)~Width+Height,data=Perch_dat[,-1])
 
 In the end we can compare the 3 models with the earlier mentioned measurements. The Distinction is made for measurements concerning the model itself how well it fits the data and the predictions which were made with the model for the test data. 
 
-The  RSS is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores. The AIC is also better for the bigger model. The behaviour of the AIC is decreasing and after a minima it increases again therefore the AIC probably isn't at a minima. 
+The  RSS is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores. The AIC is also better for the bigger model. The behaviour of the AIC is decreasing and after a minimum it increases again therefore the AIC probably isn't at a minimum.
 
 The $R^{2}$ isn't that much different from each other, whereas here is also to add: the more variables are in the model, the closer gets the measurement to 1
 
-MSE and MAD look quite the same for all of the three models
+MSE and MAD look quite the same for all of the three models.
 
 
 ### Conclusion
 
-Einstein once said quote: "Make everything as simple as possible, but not simpler".
-This is wonderfully consistent with modeling, we can see that the small model still leads to good predictions and we don't have to go to higher dimentions if a relation can be explained very well with two variables. 
-
-
+Einstein once said quote: “Make everything as simple as possible, but not simpler”. 
+This is wonderfully consistent with modelling, we can see that the small model still leads to good predictions and we don’t have to go to higher dimensions if a relation can be explained very well with two variables. 
 
 ## Appendix
 *This work is generated in R-Studio 2021.09.0 with R-4.1 with Rmarkdown, Full Code and Project can be found on https://github.com/buehlpa/TSM_MarkFor 
