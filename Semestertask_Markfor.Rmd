@@ -38,7 +38,7 @@ knitr::include_graphics("fish_pairs.jpeg")
 
 ###  Data exploration
 
-Information of the Dataset is gained with the following commands. 
+Information of the dataset is gained with the following commands. 
 ```{r , include=T,eval=  F}
 fish_dat=readr::read_csv("Fish.csv")                        #  reading as tibble
 GGally::ggpairs(fish_dat,aes(color = Species)) + theme_bw() #  pairwise plot 
@@ -161,7 +161,7 @@ Perch_fit_two=lm(sqrt(Weight)~Width+Height,data=Perch_dat[,-1])
 
 ### Results 
 
-In the end we can compare the 3 models in Figure \ref{fig:lm_two_output} (right table) with the earlier mentioned measurements. The distinction is made for measurements concerning the model itself, how well it fits the data and the predictions which were made with the model for the test data. 
+In the end we can compare the 3 models in figure \ref{fig:lm_two_output} (right table) with the earlier mentioned measurements. The distinction is made for measurements concerning the model itself, how well it fits the data and the predictions which were made with the model for the test data. 
 
 The  $RSS$ is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores. The $AIC$ is also better for the bigger model. The behavior of the $AIC$ is decreasing and after a minimum it increases again therefore the $AIC$ probably isn't at a minimum.
 
