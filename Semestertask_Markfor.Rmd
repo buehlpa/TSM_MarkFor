@@ -168,7 +168,11 @@ This is wonderfully consistent with modelling, we can see that the SLR leads to 
 \newpage
 
 ## Appendix
-This work is generated in R-Studio 2021.09.0 with R-4.1 with Rmarkdown. Full project and the used code components can be found on the Github repository (https://github.com/buehlpa/TSM_MarkFor). This is a graded assignment for the module Market Analysis and Forecasting (TSM_MarkFor) of the Master of Science in Engineering program (MSE) at Zurich University of Applied Science.
+This work is generated in R-Studio 2021.09.0 with R-4.1 with Rmarkdown. Full project and the used code components can be found on the GitHub repository (https://github.com/buehlpa/TSM_MarkFor). This is a graded assignment for the module Market Analysis and Forecasting (TSM_MarkFor) of the Master of Science in Engineering program (MSE) at Zurich University of Applied Science.
+
+### Dataset
+
+The dataset is from a past Kaggle competition (https://www.kaggle.com/aungpyaeap/fish-market) and can be found in the CSV file "Fish.csv" in the GitHub repository. 
 
 ### Literature
 
