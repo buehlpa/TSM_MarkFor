@@ -3,7 +3,12 @@ title: "Market Forecasting Assignment: Multiple Linear Regression"
 author: "Teacher: Dr. Stefan Groesser, Dr. Christoph Imboden"
 date: "Autors: Benedech Rodolfo, Buehler Pascal, Geeler Ken, 04.12.2021"
 output:
+  
   pdf_document: default
+
+
+header-includes:
+- \usepackage[font=it]{caption}
 ---
 
 ```{r setup, include=FALSE}
@@ -12,12 +17,13 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_chunk$set(warning = F)
 knitr::opts_chunk$set(message  = F)
 knitr::opts_chunk$set(fig.align = "center")
+
 ```
 ###  Short Theory Recap: Multiple Linear Regression (MLR)
-The model equation for MLR has the form  $Y=X\Theta$ +$\epsilon$ ,with $Y$ being the target vector, $X$ the explanatory matrix, $\Theta$ the parameter vector and the error vector $\epsilon$. We assume that the residuals are normally distributed  $\epsilon$ ~  $N(0,\sigma^{2})$. The estimation of $\Theta$ is done with the maxium likelihood method  $L(\theta)=P(X|\theta)=\frac{1}{\sqrt(2\pi)\sigma}*e^{-\frac{1}{2\sigma^{2}}*||y-\theta X||^{2}}$ by solving the equation $\Theta=(X^{T}X)^{-1}X^{T}y$  *(1)*.
+The model equation for MLR has the form  $Y=X\Theta$ +$\epsilon$ ,with $Y$ being the target vector, $X$ the explanatory matrix, $\Theta$ the parameter vector and the error vector $\epsilon$. With the assumption that the residuals are normally distributed  $\epsilon$ ~  $N(0,\sigma^{2})$. The estimation of $\Theta$ is done with the maxium likelihood method  $L(\theta)=P(X|\theta)=\frac{1}{\sqrt(2\pi)\sigma}*e^{-\frac{1}{2\sigma^{2}}*||y-\theta X||^{2}}$ by solving the equation $\Theta=(X^{T}X)^{-1}X^{T}y$  *(1)*.
 
 ###  Dataset
-We use the fish market dataset from a past Kaggle competition. It describes the characteristics of seven fish species. Figure \ref{fig:pairwise} is a pairwise plot and provides us with an overview. This plot as well as the dataset is further described in the next chapter. 
+We use the fish market dataset from Kaggle *{1}*. It describes the characteristics of seven fish species. Figure \ref{fig:pairwise} is a pairwise plot and provides us with an overview. This plot as well as the dataset is further described in the next chapter. 
 
 ```{r, include=F,echo=T}
 library(GGally)
@@ -46,13 +52,13 @@ GGally::ggpairs(fish_dat,aes(color = Species)) + theme_bw() #  pairwise plot
 summary(fish_dat);str(fish_dat);View(fish_dat)              #  statistics and structure
 ``` 
 
-The pairwise plot in figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the species. The coloring in the pairwise plot allows a distinction of the species. From the top leftmost plot, it can be seen that the Perch species has the most observations. 
+The pairwise plot in figure \ref{fig:pairwise} provides a visual overview of the dataset. It consists of 159 observations measured for 6 numerical variables which measure properties of the fish and one categorical variable to describe the species. The coloring in the pairwise plot allows a distinction of the species. From the top leftmost plot, it can be seen that the  species *Perch* has the most observations. 
 
-From the pairwise scatter plots  a nonlinear relation between weight and the other numerical variables is observed, therefore the correlation *cannot* be correctly interpreted with these variable pairs. Further, the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other. The length of the fish is measured in different ways, which is why there are three different $Length1$ (vertical length), $Length2$ (diagonal length) and $Length3$ (cross length).
+From the pairwise scatter plots  a nonlinear relation between weight and the other numerical variables is observed, therefore the correlation *cannot* be correctly interpreted with these variable pairs. Further, the other numerical variables are linearly correlated (the correlation statistic can be interpreted), interestingly the 3 length measurements have a very strong correlation to each other. The length of the fish is measured in different ways, which is why there are three distinct $Length1$ (vertical length), $Length2$ (diagonal length) and $Length3$ (cross length).
 
-The density plots in the diagonal help to see how the variables are distributed. For example, the width of Smelt tends to have a bimodal distribution. This must be taken with a grain of salt due to the sparse data, which can be seen on the inverted histograms on the left. Also, the pairwise boxplots give a good overview for comparison between the different variables. For example, it can be seen that the variance of the species varies among the levels.
+The density plots in the diagonal help to see how the variables are distributed. For example, the width of *Smelt* tends to have a bimodal distribution. This must be taken with a grain of salt due to the sparse data, which can be seen on the inverted histograms on the left. Also, the pairwise boxplots give a good overview for comparison between the different variables. For example, it can be seen that the variance of the species varies among the levels.
 
-The distribution of the target variables is actually very important since MLR assumes multivariate normality of the data. For the modelling of different  distributions, we might choose another model such as a Generalized-Linear-Model to improve the model validity. In this paper, we explore the use of MLR.
+The distribution of the target variables is actually very important since MLR assumes multivariate normality of the data. For the modelling of different  distributions, we might choose another model such as a Generalized-Linear-Model to improve the model validity. But in this paper, we explore only the use of MLR.
 
 ```{r, include=F,echo=T}
 Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch 
@@ -61,7 +67,7 @@ Perch_dat=fish_dat%>%dplyr::filter(Species=="Perch") # Use only Perch
 
 ###  Building a Model
 
-To evaluate the accuracy of the model created in this chapter, the data is split into a train and test set, using Simple Random Sampling without Replacement ($SRSWR$). 80% of the data is used for training and the remaining 20% is for testing the prediction accuracy. The corresponding R code is given below:
+To evaluate the accuracy of the model created in this chapter, the data is split into a train and a test set, using Simple Random Sampling without Replacement ($SRSWR$). 80% of the data is used for training and the remaining 20% is for testing the prediction accuracy. The corresponding R code is given below:
 
 ```{r , include=T,eval=  T}
 set.seed(42);samp= sample(1:56,size = 11,replace = F)       # Seed & sample size 80%
@@ -76,7 +82,7 @@ Finally, the models are compared quantitatively with the residual sum of squares
 
 ###  Simple Linear Regression (SLR)
 
-For the sake of simplicity, we focus on the species Perch (Swiss-German: Egli) since we have the most data. Since the weight has a linear relation to the other variables, we try to transform it properly.
+For the sake of simplicity, we focus on the species Perch (Swiss-German: Egli), because we have the most data there. Since the weight has  a nonlinear relation to the other variables, we try to transform it properly.
 
 
 ```{r transformation, include=T,echo=  F,fig.dim=c(8,2) , fig.cap="Transformations of the variable weight for Perch"}
@@ -106,7 +112,11 @@ ggplot(Perch_train,aes(Width,Weight_sqrt)) +
   geom_smooth(method='lm',color="black",fill="red") + theme_bw()
 ```
 
-From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained variance measurement $R^{2}$ is very high with a value of $0.9683$. The $AIC$ for this model is $171.6$. The p-values for the both parameters hypothesis tests are also significant. By inspecting the residuals in figure \ref{fig:resid_perch}, we can check the model assumptions [2]. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model. Nevertheless, the variance is not constant and increases towards the right side. 
+From the summary output we get the following model $Weight_{i}=(-6.000 + 4.9368 * Width_{i})^{2}$. The explained variance measurement $R^{2}$ is very high with a value of $0.9683$. The $AIC$ for this model is $171.6$. The p-values for the both parameters hypothesis tests are also significant. 
+
+&nbsp;
+
+By inspecting the residuals in Figure \ref{fig:resid_perch}, we can check the model assumptions [2]. The residuals seem to follow a normal distribution, have constant mean and there are no points which are crucial to shift the model. Nevertheless, the variance is not constant and increases towards the right side. 
 
 ```{r resid_perch,out.width='100%',fig.dim=c(5,3), fig.cap="Analysis of residuals for the SLR. The expected value remains stable (Tukey-Anscombe), but the variance increases with time (scale location). The distribution is not perfect, but can be passed (Normal Q-Q). There are some outliers, but the values for the explanatory variables are within the range. According to Cook's Distance, they are not yet dangerously influential.", echo=FALSE}
 knitr::include_graphics("Residuals_1_4.jpeg")
@@ -155,7 +165,9 @@ Perch_fit_two=lm(sqrt(Weight)~Width+Height,data=Perch_dat[,-1])
 
 ### Results 
 
-The quantitative comparison of the different models are shown in the right table in figure \ref{fig:lm_two_output}. We distinct these metrics between the model itself (how well it fits the data) and the accuracy of the predictions using the test sample. The  $RSS$ is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores. AIC considers the trade-off between model goodness of fit and model simplicity when assessing the amount of information lost by a model. To put it another way, AIC considers both the risks of overfitting and underfitting. The $AIC$ is also better (smaller) for the bigger model. The $R^{2}$ is relatively high with >96% for all three models. The largest model describes almost the entire variance with a $R^{2}$ of 99.05%.
+The quantitative comparison of the different models are shown in the right table in figure \ref{fig:lm_two_output}. We distinct these metrics between the model itself (how well it fits the data) and the accuracy of the predictions using the test sample. The  $RSS$ is the best for the full model, that was to expect since a model with more parameters always leads to smaller scores.
+
+$AIC$ considers the trade-off between model goodness of fit and model simplicity when assessing the amount of information lost by a model. To put it another way, $AIC$ considers both the risks of overfitting and underfitting. The $AIC$ is also better (smaller) for the bigger model. The $R^{2}$ is relatively high with >96% for all three models. The largest model describes almost the entire variance with a $R^{2}$ of 99.05%.
 
 Next we compare the predictions. The average of the absolute errors is known as $MAD$. The $MSE$ is the average of the squared errors. $MSE$ is more sensitive to big errors since the errors are squared. $MSE$ and $MAD$ look quite the same for all of the three models. Therefore, the models are equally useful for forecasting. 
 
@@ -163,7 +175,11 @@ Next we compare the predictions. The average of the absolute errors is known as 
 ### Conclusion
 
 Einstein once said quote: *“Make everything as simple as possible, but not simpler”*. 
-This is wonderfully consistent with modelling, we can see that the SLR leads to good predictions and we do not need to go to higher dimensions if a relation can be explained very well with two variables. In this paper, we applied a limited number of variable selection methods. These could be complemented with methods like stepwise selection (forward and backward) or the Bayesian Information Criterion (BIC). In contrast to the AIC, the BIC penalizes more complex models more, so that they reach a higher value. Of course, one would have to make sure that the data set used for this is sufficiently large and representative. Finally, based on our experience in this work, we suggest that trial-and-error is necessary in real-world applications in order to find the optimal model. Finally, a model must also be evaluated from an expert point of view, since, as is well known, correlation does not equal causality. 
+This is wonderfully consistent with modelling, we can see that the SLR leads to good predictions and we do not need to go to higher dimensions if a relation can be explained very well with two variables. In this paper, we applied a limited number of variable selection methods.
+
+These could be complemented with methods like stepwise selection (forward and backward) or the Bayesian Information Criterion (BIC). In contrast to the AIC, the BIC penalizes more complex models more, so that they reach a higher value. Of course, one would have to make sure that the data set used for this is sufficiently large and representative. Finally, based on our experience in this work, we suggest that trial-and-error is necessary in real-world applications in order to find the optimal model.
+
+Finally, a model must also be evaluated from an expert point of view, since, as it is well known, correlation does not equal causality. 
 
 \newpage
 
@@ -171,8 +187,8 @@ This is wonderfully consistent with modelling, we can see that the SLR leads to 
 This work is generated in R-Studio 2021.09.0 with R-4.1 with Rmarkdown. Full project and the used code components can be found on the GitHub repository (https://github.com/buehlpa/TSM_MarkFor). This is a graded assignment for the module Market Analysis and Forecasting (TSM_MarkFor) of the Master of Science in Engineering program (MSE) at Zurich University of Applied Science.
 
 ### Dataset
-
-The dataset is from a past Kaggle competition (https://www.kaggle.com/aungpyaeap/fish-market) and can be found in the CSV file "Fish.csv" in the GitHub repository. 
+*{1}*
+The dataset is downloaded from Kaggle  (https://www.kaggle.com/aungpyaeap/fish-market) and can be found in the CSV file "Fish.csv" in the GitHub repository. 
 
 ### Literature
 
