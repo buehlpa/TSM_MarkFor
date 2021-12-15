@@ -19,7 +19,7 @@ knitr::opts_chunk$set(message  = F)
 knitr::opts_chunk$set(fig.align = "center")
 
 ```
-###  Short Theory Recap: Multiple Linear Regression (MLR)
+###  Theory Recap: Multiple Linear Regression (MLR)
 The model equation for MLR has the form  $Y=X\Theta$ +$\epsilon$ ,with $Y$ being the target vector, $X$ the explanatory matrix, $\Theta$ the parameter vector and the error vector $\epsilon$. With the assumption that the residuals are normally distributed  $\epsilon$ ~  $N(0,\sigma^{2})$. The estimation of $\Theta$ is done with the maxium likelihood method  $L(\theta)=P(X|\theta)=\frac{1}{\sqrt(2\pi)\sigma}*e^{-\frac{1}{2\sigma^{2}}*||y-\theta X||^{2}}$ by solving the equation $\Theta=(X^{T}X)^{-1}X^{T}y$  *(1)*.
 
 ###  Dataset
